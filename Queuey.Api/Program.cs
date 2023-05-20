@@ -1,3 +1,4 @@
+using Noppes.Queuey.Api.Authentication;
 using Noppes.Queuey.Core;
 using Noppes.Queuey.MongoDB;
 
@@ -26,9 +27,16 @@ public class Program
         if (mongoConf == null)
             throw new InvalidOperationException("MongoDB not configured");
 
+        var apiKeys = configurationRoot.GetSection("ApiKeys").Get<ICollection<string>>();
+        if (apiKeys == null)
+            throw new InvalidOperationException("No API keys configured");
+
         // ASP.NET Core stuff
         var builder = WebApplication.CreateBuilder(args);
         var services = builder.Services;
+
+        // Authentication
+        services.AddSingleton(new ApiKeyChecker(apiKeys));
 
         // Add services to the container.
         services.RegisterCore();
@@ -40,8 +48,7 @@ public class Program
 
         // Configure the HTTP request pipeline.
 
-        app.UseAuthorization();
-
+        app.UseApiKeyAuthentication();
 
         app.MapControllers();
 
