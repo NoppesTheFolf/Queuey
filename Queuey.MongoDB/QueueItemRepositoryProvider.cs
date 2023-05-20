@@ -9,7 +9,7 @@ internal class QueueItemRepositoryProvider : IQueueItemRepositoryProvider
 {
     private readonly IMongoDatabase _database;
     private readonly IMongoDatabase _historicDatabase;
-    private readonly ConcurrentDictionary<string, IMongoCollection<QueueItemEntity>> _queues;
+    private readonly ConcurrentDictionary<(IMongoDatabase, string), IMongoCollection<QueueItemEntity>> _queues;
 
     public QueueItemRepositoryProvider(string connectionString, string databaseName, string historicDatabaseName)
     {
@@ -18,25 +18,27 @@ internal class QueueItemRepositoryProvider : IQueueItemRepositoryProvider
         _database = mongoClient.GetDatabase(databaseName);
         _historicDatabase = mongoClient.GetDatabase(historicDatabaseName);
 
-        _queues = new ConcurrentDictionary<string, IMongoCollection<QueueItemEntity>>();
+        _queues = new ConcurrentDictionary<(IMongoDatabase, string), IMongoCollection<QueueItemEntity>>();
     }
 
     private IMongoCollection<QueueItemEntity> GetQueue(IMongoDatabase database, string name, bool addIndex)
     {
-        var collection = _queues.GetOrAdd(name, x =>
+        var collection = _queues.GetOrAdd((database, name), _ => CreateQueue(database, name, addIndex));
+
+        return collection;
+    }
+
+    private static IMongoCollection<QueueItemEntity> CreateQueue(IMongoDatabase database, string name, bool addIndex)
+    {
+        var collection = database.GetCollection<QueueItemEntity>(name);
+
+        if (addIndex)
         {
-            var collection = database.GetCollection<QueueItemEntity>(x);
-
-            if (addIndex)
-            {
-                var indexKeysDefinition = Builders<QueueItemEntity>.IndexKeys
-                    .Descending(y => y.Priority)
-                    .Ascending(y => y.CreatedWhen);
-                collection.Indexes.CreateOneAsync(new CreateIndexModel<QueueItemEntity>(indexKeysDefinition));
-            }
-
-            return collection;
-        });
+            var indexKeysDefinition = Builders<QueueItemEntity>.IndexKeys
+                .Descending(y => y.Priority)
+                .Ascending(y => y.CreatedWhen);
+            collection.Indexes.CreateOneAsync(new CreateIndexModel<QueueItemEntity>(indexKeysDefinition));
+        }
 
         return collection;
     }

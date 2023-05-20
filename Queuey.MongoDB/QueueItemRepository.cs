@@ -34,7 +34,7 @@ internal class QueueItemRepository : IQueueItemRepository
         await _collection.InsertManyAsync(entities);
     }
 
-    public async Task<IList<DequeueItem>?> Get(int limit, TimeSpan visibilityDelay)
+    public async Task<IList<DequeueItem>> Get(int limit, TimeSpan visibilityDelay)
     {
         var entities = await GetItemsToDequeue(limit);
         if (!entities.Any())
@@ -78,14 +78,14 @@ internal class QueueItemRepository : IQueueItemRepository
         await _collection.UpdateManyAsync(filter, update);
     }
 
-    public async Task MoveToHistoryAsync(string id)
+    public async Task<bool> MoveToHistoryAsync(string id)
     {
         var objectId = ObjectId.Parse(id);
         var idFilter = Builders<QueueItemEntity>.Filter.Eq(x => x.Id, objectId);
 
         var entity = await _collection.FindOneOrDefaultAsync(idFilter);
         if (entity == null)
-            return;
+            return false;
 
         var historyEntity = await _historyCollection.FindOneOrDefaultAsync(idFilter);
         if (historyEntity == null)
@@ -95,5 +95,6 @@ internal class QueueItemRepository : IQueueItemRepository
         }
 
         await _collection.DeleteOneAsync(idFilter);
+        return true;
     }
 }

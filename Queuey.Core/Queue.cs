@@ -8,9 +8,9 @@ public interface IQueue
 {
     Task EnqueueAsync(ICollection<EnqueueItem> items);
 
-    Task<ICollection<DequeueItem>?> DequeueAsync(int limit, TimeSpan? visibilityDelay = null);
+    Task<ICollection<DequeueItem>> DequeueAsync(int limit, TimeSpan? visibilityDelay = null);
 
-    Task AcknowledgeAsync(string id);
+    Task<bool> AcknowledgeAsync(string id);
 }
 
 internal class Queue : IQueue
@@ -34,18 +34,19 @@ internal class Queue : IQueue
         await _repository.Add(items);
     }
 
-    public async Task<ICollection<DequeueItem>?> DequeueAsync(int limit, TimeSpan? visibilityDelay = null)
+    public async Task<ICollection<DequeueItem>> DequeueAsync(int limit, TimeSpan? visibilityDelay = null)
     {
         using var _ = await _lock.LockAsync();
 
-        var item = await _repository.Get(limit, visibilityDelay ?? TimeSpan.Zero);
-        return item;
+        var items = await _repository.Get(limit, visibilityDelay ?? TimeSpan.Zero);
+        return items;
     }
 
-    public async Task AcknowledgeAsync(string id)
+    public async Task<bool> AcknowledgeAsync(string id)
     {
         using var _ = await _lock.LockAsync();
 
-        await _repository.MoveToHistoryAsync(id);
+        var couldBeFound = await _repository.MoveToHistoryAsync(id);
+        return couldBeFound;
     }
 }

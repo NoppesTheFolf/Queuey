@@ -6,7 +6,7 @@ public interface IQueueItemRepository
 {
     Task Add(ICollection<EnqueueItem> items);
 
-    Task<IList<DequeueItem>?> Get(int limit, TimeSpan visibilityDelay);
+    Task<IList<DequeueItem>> Get(int limit, TimeSpan visibilityDelay);
 
-    Task MoveToHistoryAsync(string id);
+    Task<bool> MoveToHistoryAsync(string id);
 }
