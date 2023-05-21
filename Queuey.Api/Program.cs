@@ -1,4 +1,5 @@
 using Noppes.Queuey.Api.Authentication;
+using Noppes.Queuey.Api.Validation;
 using Noppes.Queuey.Core;
 using Noppes.Queuey.MongoDB;
 
@@ -38,11 +39,17 @@ public class Program
         // Authentication
         services.AddSingleton(new ApiKeyChecker(apiKeys));
 
+        // Validation
+        services.RegisterValidators();
+
         // Add services to the container.
         services.RegisterCore();
         services.RegisterMongoDB(mongoConf.ConnectionString, mongoConf.Database, mongoConf.HistoricDatabase);
 
-        services.AddControllers();
+        services.AddControllers(options =>
+        {
+            options.ModelValidatorProviders.Clear();
+        });
 
         var app = builder.Build();
 

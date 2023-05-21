@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Noppes.Queuey.Api.Models;
+using Noppes.Queuey.Api.Validation;
 using Noppes.Queuey.Core;
 using Noppes.Queuey.Core.Models;
 
 namespace Noppes.Queuey.Api.Controllers;
 
 [ApiController]
+[TypeFilter(typeof(ValidationFilter))]
 [Route("queue")]
 public class QueueController : ControllerBase
 {
@@ -34,10 +36,10 @@ public class QueueController : ControllerBase
 
     [HttpGet]
     [Route("{name}/dequeue")]
-    public async Task<IActionResult> Dequeue(string name, int? limit, TimeSpan? visibilityDelay)
+    public async Task<IActionResult> Dequeue(string name, [FromQuery] DequeueParametersModel model)
     {
         var queue = _queueProvider.Get(name);
-        var items = await queue.DequeueAsync(limit ?? 1, visibilityDelay);
+        var items = await queue.DequeueAsync(model.Limit ?? 1, model.VisibilityDelay);
 
         var models = items.Select(x => new DequeueItemModel
         {

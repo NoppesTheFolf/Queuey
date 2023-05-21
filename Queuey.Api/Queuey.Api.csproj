@@ -11,6 +11,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="FluentValidation" Version="11.5.2" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Queuey.Core\Queuey.Core.csproj" />
 		<ProjectReference Include="..\Queuey.MongoDB\Queuey.MongoDB.csproj" />
 	</ItemGroup>
