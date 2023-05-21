@@ -26,6 +26,9 @@ internal class Queue : IQueue
 
     public async Task<IList<string>> EnqueueAsync(IList<EnqueueItem> items)
     {
+        if (items.Count == 0)
+            return Array.Empty<string>();
+
         using var _ = await _lock.LockAsync();
 
         foreach (var item in items)
