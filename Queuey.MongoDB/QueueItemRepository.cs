@@ -18,7 +18,7 @@ internal class QueueItemRepository : IQueueItemRepository
         _historyCollection = historyCollection;
     }
 
-    public async Task Add(ICollection<EnqueueItem> items)
+    public async Task<IList<string>> AddAsync(ICollection<EnqueueItem> items)
     {
         var entities = items.Select(item => new QueueItemEntity
         {
@@ -32,9 +32,12 @@ internal class QueueItemRepository : IQueueItemRepository
         }).ToList();
 
         await _collection.InsertManyAsync(entities);
+
+        var ids = entities.Select(x => x.Id.ToString()).ToList();
+        return ids;
     }
 
-    public async Task<IList<DequeueItem>> Get(int limit, TimeSpan visibilityDelay)
+    public async Task<IList<DequeueItem>> GetAsync(int limit, TimeSpan visibilityDelay)
     {
         var entities = await GetItemsToDequeue(limit);
         if (!entities.Any())

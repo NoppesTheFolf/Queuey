@@ -6,9 +6,9 @@ namespace Noppes.Queuey.Core;
 
 public interface IQueue
 {
-    Task EnqueueAsync(ICollection<EnqueueItem> items);
+    Task<IList<string>> EnqueueAsync(IList<EnqueueItem> items);
 
-    Task<ICollection<DequeueItem>> DequeueAsync(int limit, TimeSpan? visibilityDelay = null);
+    Task<IList<DequeueItem>> DequeueAsync(int limit, TimeSpan? visibilityDelay = null);
 
     Task<bool> AcknowledgeAsync(string id);
 }
@@ -24,21 +24,22 @@ internal class Queue : IQueue
         _lock = new AsyncLock();
     }
 
-    public async Task EnqueueAsync(ICollection<EnqueueItem> items)
+    public async Task<IList<string>> EnqueueAsync(IList<EnqueueItem> items)
     {
         using var _ = await _lock.LockAsync();
 
         foreach (var item in items)
             item.VisibleWhen = item.VisibleWhen.ToUniversalTime();
 
-        await _repository.Add(items);
+        var ids = await _repository.AddAsync(items);
+        return ids;
     }
 
-    public async Task<ICollection<DequeueItem>> DequeueAsync(int limit, TimeSpan? visibilityDelay = null)
+    public async Task<IList<DequeueItem>> DequeueAsync(int limit, TimeSpan? visibilityDelay = null)
     {
         using var _ = await _lock.LockAsync();
 
-        var items = await _repository.Get(limit, visibilityDelay ?? TimeSpan.Zero);
+        var items = await _repository.GetAsync(limit, visibilityDelay ?? TimeSpan.Zero);
         return items;
     }
 

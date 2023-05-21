@@ -4,9 +4,9 @@ namespace Noppes.Queuey.Core.Repositories;
 
 public interface IQueueItemRepository
 {
-    Task Add(ICollection<EnqueueItem> items);
+    Task<IList<string>> AddAsync(ICollection<EnqueueItem> items);
 
-    Task<IList<DequeueItem>> Get(int limit, TimeSpan visibilityDelay);
+    Task<IList<DequeueItem>> GetAsync(int limit, TimeSpan visibilityDelay);
 
     Task<bool> MoveToHistoryAsync(string id);
 }

@@ -27,9 +27,9 @@ public class QueueController : ControllerBase
             Priority = x.Priority ?? int.MinValue
         }).ToList();
         var queue = _queueProvider.Get(name);
-        await queue.EnqueueAsync(items);
+        var ids = await queue.EnqueueAsync(items);
 
-        return Ok();
+        return Ok(ids);
     }
 
     [HttpGet]
